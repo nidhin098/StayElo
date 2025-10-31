@@ -1,120 +1,139 @@
+// src/components/Dashboard.jsx
 import React from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { useNavigate } from "react-router-dom";
+import { RotatingCard, OccupancyBar3D, RoomStatusPieChart } from "./ThreeElements";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const pieData = { occupied: 78, unoccupied: 34, service: 8 };
+  const totalRooms = pieData.occupied + pieData.unoccupied + pieData.service;
+  const pct = (n) => Math.round((n / totalRooms) * 100);
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen font-[Poppins] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md">
-        <div className="p-6 border-b">
-          <h1 className="text-xl font-bold text-indigo-600">Hotel Admin</h1>
-        </div>
-        <nav className="p-4 space-y-2">
-          {["Dashboard", "Bookings", "Rooms", "Customers", "Reports", "Settings"].map(
-            (item) => (
-              <a
+      <aside className="relative w-64 bg-gray-800/60 backdrop-blur-xl border-r border-gray-700 shadow-2xl flex flex-col justify-between">
+        <div>
+          <div className="p-6 border-b border-gray-700">
+            <h1 className="text-2xl font-extrabold text-indigo-400 tracking-wider drop-shadow-md">
+              Hotel Admin
+            </h1>
+          </div>
+          <nav className="p-4 space-y-2">
+            {["Dashboard", "Bookings", "Rooms", "Customers", "Reports", "Settings"].map((item) => (
+              <button
                 key={item}
-                href="#"
-                className="block px-4 py-2 rounded hover:bg-indigo-100 text-gray-700 font-medium"
+                onClick={() => item === "Rooms" && navigate("/rooms")}
+                className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-between ${
+                  item === "Rooms"
+                    ? "bg-indigo-600/80 text-white shadow-lg shadow-indigo-700/30 hover:bg-indigo-700"
+                    : "text-gray-300 hover:bg-gray-700/60 hover:text-white hover:shadow-sm"
+                }`}
               >
                 {item}
-              </a>
-            )
-          )}
-        </nav>
-        <div className="absolute bottom-0 w-64 p-4 border-t">
+                <span className="text-xs opacity-60">{item === "Rooms" && "→"}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="w-full p-4 border-t border-gray-700 bg-gray-800/50">
           <p className="text-sm font-semibold">Admin</p>
-          <p className="text-xs text-gray-500">admin@hotel.com</p>
-          <button className="mt-2 w-full bg-red-500 text-white py-1 rounded hover:bg-red-600">
+          <p className="text-xs text-gray-400">admin@hotel.com</p>
+          <button className="mt-3 w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-2 rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-md">
             Logout
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        {/* Top Stats */}
-        <div className="grid grid-cols-4 gap-6 mb-6">
-          <StatCard title="Total Bookings" value="1,234" change="+5.2%" />
-          <StatCard title="Today's Check-ins" value="56" change="+3.4%" />
-          <StatCard title="Today's Check-outs" value="34" change="-2.5%" />
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-sm font-semibold text-gray-500">Occupancy Rate</h3>
-            <p className="text-2xl font-bold text-gray-800">75%</p>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-indigo-600 h-2 rounded-full" style={{ width: "75%" }}></div>
+      <main className="flex-1 p-8 space-y-10 overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-3xl font-semibold text-indigo-300 tracking-wide">Dashboard Overview</h2>
+          <span className="text-sm text-gray-400">Updated just now</span>
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {[
+            { label: "Total Bookings", value: "1,234", change: "+5.2%", color: "#6366f1" },
+            { label: "Today's Check-ins", value: "56", change: "+3.4%", color: "#16a34a" },
+            { label: "Today's Check-outs", value: "34", change: "-2.5%", color: "#dc2626" },
+          ].map((stat, idx) => (
+            <div
+              key={idx}
+              className="bg-gray-800/80 rounded-2xl shadow-2xl backdrop-blur-md border border-gray-700 hover:scale-[1.03] hover:shadow-indigo-700/20 transition-transform duration-300"
+            >
+              <Canvas camera={{ position: [3.5, 2.5, 3.5] }}>
+                <ambientLight intensity={0.6} />
+                <directionalLight position={[4, 5, 3]} intensity={0.8} />
+                <RotatingCard {...stat} />
+                <OrbitControls enableZoom={false} />
+              </Canvas>
+            </div>
+          ))}
+
+          <div className="bg-gray-800/80 rounded-2xl shadow-2xl border border-gray-700 hover:scale-[1.03] hover:shadow-indigo-700/20 transition-transform duration-300">
+            <Canvas camera={{ position: [4, 3, 4] }}>
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[4, 5, 3]} intensity={0.8} />
+              <OccupancyBar3D percent={75} />
+              <OrbitControls enableZoom={false} />
+            </Canvas>
+          </div>
+        </div>
+
+        {/* Room Status Section */}
+        <section className="bg-gray-800/70 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-700">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-indigo-300 tracking-wide">
+              Current Room Status
+            </h2>
+            <span className="text-sm text-gray-300">
+              Total rooms: {totalRooms}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 3D Pie */}
+            <div className="col-span-2 h-96 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shadow-inner">
+              <Canvas camera={{ position: [0, 4, 6], fov: 50 }}>
+                <ambientLight intensity={0.6} />
+                <directionalLight position={[5, 5, 5]} intensity={0.9} castShadow />
+                <RoomStatusPieChart {...pieData} />
+                <OrbitControls />
+              </Canvas>
+            </div>
+
+            {/* Legend */}
+            <div className="bg-gray-900/80 rounded-xl p-6 border border-gray-700 shadow-md space-y-5">
+              {[
+                { label: "Occupied", color: "bg-indigo-500", value: pieData.occupied },
+                { label: "Unoccupied", color: "bg-green-500", value: pieData.unoccupied },
+                { label: "To be serviced", color: "bg-red-500", value: pieData.service },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-4 h-4 rounded-full ${item.color} shadow-sm`} />
+                    <span className="text-sm text-gray-200">{item.label}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-100">
+                    {item.value} ({pct(item.value)}%)
+                  </span>
+                </div>
+              ))}
+              <p className="pt-4 text-xs text-gray-400 border-t border-gray-700">
+                Updated 24h ago • You can rotate the 3D chart
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Recent Bookings */}
-        <div className="bg-white p-6 rounded shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Bookings</h2>
-          <table className="w-full text-sm text-left border">
-            <thead className="bg-gray-100">
-              <tr>
-                {["Booking ID", "Customer Name", "Check-in", "Check-out", "Room Type", "Status"].map(
-                  (col) => (
-                    <th key={col} className="px-4 py-2 border-b font-medium text-gray-600">
-                      {col}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["BK#1024", "John Doe", "2024-01-01", "2024-01-05", "Deluxe Room", "Confirmed"],
-                ["BK#1025", "Jane Smith", "2024-01-02", "2024-01-06", "Standard Room", "Pending"],
-                ["BK#1026", "Robert Brown", "2024-01-03", "2024-01-07", "Suite", "Checked-in"],
-                ["BK#1027", "Michael Williams", "2024-01-04", "2024-01-08", "Deluxe Room", "Cancelled"],
-              ].map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  {row.map((cell, i) => (
-                    <td key={i} className="px-4 py-2 border-b">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Room Status */}
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-lg font-semibold mb-4">Current Room Status</h2>
-          <div className="grid grid-cols-4 gap-6 text-center">
-            <RoomStatus label="Total Rooms" value="120" color="text-gray-800" />
-            <RoomStatus label="Available" value="34" color="text-green-600" />
-            <RoomStatus label="Occupied" value="78" color="text-indigo-600" />
-            <RoomStatus label="Maintenance" value="8" color="text-red-600" />
-          </div>
-        </div>
+        </section>
       </main>
     </div>
   );
 };
-
-// Reusable Components
-const StatCard = ({ title, value, change }) => (
-  <div className="bg-white p-4 rounded shadow">
-    <h3 className="text-sm font-semibold text-gray-500">{title}</h3>
-    <p className="text-2xl font-bold text-gray-800">{value}</p>
-    <p
-      className={`text-sm font-medium ${
-        change.startsWith("-") ? "text-red-500" : "text-green-500"
-      }`}
-    >
-      {change}
-    </p>
-  </div>
-);
-
-const RoomStatus = ({ label, value, color }) => (
-  <div>
-    <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    <p className="text-sm text-gray-500">{label}</p>
-  </div>
-);
 
 export default Dashboard;
